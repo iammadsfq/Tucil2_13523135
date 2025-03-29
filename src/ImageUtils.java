@@ -9,6 +9,8 @@ public class ImageUtils {
             BufferedImage image = ImageIO.read(new File(imagePath));
             int width = image.getWidth();
             int height = image.getHeight();
+            System.out.println(width);
+            System.out.println(height);
             int[][][] imageArray = new int[height][width][3];
 
             for (int y = 0; y < height; y++) {
@@ -24,4 +26,29 @@ public class ImageUtils {
             return null;
         }
     }
+
+    public static void saveQuadtreeAsImage(Quadtree tree, int width, int height, String outputPath) throws Exception {
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        fillImageFromQuadtree(tree, img);
+        ImageIO.write(img, "jpg", new File(outputPath));
+    }
+
+    private static void fillImageFromQuadtree(Quadtree tree, BufferedImage img) {
+        if (tree == null) return;
+
+        if (tree.nw == null) { // Leaf node
+            for (int i = tree.getY(); i < tree.getY() + tree.height; i++) {
+                for (int j = tree.getX(); j < tree.getX() + tree.width; j++) {
+                    int rgb = (tree.getRed() << 16) | (tree.getGreen() << 8) | tree.getBlue();
+                    img.setRGB(j, i, rgb);
+                }
+            }
+        } else {
+            fillImageFromQuadtree(tree.nw, img);
+            fillImageFromQuadtree(tree.ne, img);
+            fillImageFromQuadtree(tree.sw, img);
+            fillImageFromQuadtree(tree.se, img);
+        }
+    }
+
 }
