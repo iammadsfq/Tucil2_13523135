@@ -2,7 +2,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
 
-public class ImageUtils {
+public class Utils {
 
     public static int[][][] imageToArray(String imagePath) {
         try {
@@ -34,7 +34,7 @@ public class ImageUtils {
     }
 
     private static void fillImageFromQuadtree(Quadtree tree, BufferedImage img) {
-        if (tree == null) return;
+        if (tree.root == null) return;
 
         if (tree.nw == null) { // Leaf node
             for (int i = tree.getY(); i < tree.getY() + tree.height; i++) {
@@ -51,4 +51,8 @@ public class ImageUtils {
         }
     }
 
+    public static long getFileSize(String filePath) {
+        File file = new File(filePath);
+        return file.length();  // Mengembalikan ukuran file dalam byte
+    }
 }

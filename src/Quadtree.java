@@ -5,6 +5,10 @@ public class Quadtree {
     boolean isLeaf;
 
     public Quadtree(int[][][] imageArray, int x, int y, int width, int height, double threshold, int minBlockSize) {
+        if (width*height == 0) {
+            isLeaf = false;
+            return;
+        }
         this.width = width;
         this.height = height;
         System.out.println(width);
@@ -24,6 +28,18 @@ public class Quadtree {
             sw = new Quadtree(imageArray, x, y + northH, westW, southH, threshold, minBlockSize);
             se = new Quadtree(imageArray, x + westW, y + northH, eastW, southH, threshold, minBlockSize);
         }
+    }
+
+    public int getDepth() {
+        if (isLeaf) {
+            return 1; // Leaf node
+        }
+        int nwDepth = (nw != null) ? nw.getDepth() : 0;
+        int neDepth = (ne != null) ? ne.getDepth() : 0;
+        int swDepth = (sw != null) ? sw.getDepth() : 0;
+        int seDepth = (se != null) ? se.getDepth() : 0;
+
+        return 1 + Math.max(Math.max(nwDepth, neDepth), Math.max(swDepth, seDepth));
     }
 
     private int[] computeAverageColor(int[][][] image, int x, int y, int width, int height) {
