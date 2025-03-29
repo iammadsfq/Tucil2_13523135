@@ -27,8 +27,9 @@ public class Utils {
 
     public static void saveQuadtreeAsImage(Quadtree tree, int width, int height, String outputPath) throws Exception {
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        String outputExt = outputPath.substring(outputPath.lastIndexOf('.') + 1).toLowerCase();
         fillImageFromQuadtree(tree, img);
-        ImageIO.write(img, "jpg", new File(outputPath));
+        ImageIO.write(img, outputExt, new File(outputPath));
     }
 
     private static void fillImageFromQuadtree(Quadtree tree, BufferedImage img) {

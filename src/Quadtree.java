@@ -1,10 +1,13 @@
+import java.util.HashMap;
+import java.util.Map;
+
 public class Quadtree {
     int width, height;
     Node root;
     Quadtree nw, ne, sw, se;
     boolean isLeaf;
 
-    public Quadtree(int[][][] imageArray, int x, int y, int width, int height, double threshold, int minBlockSize) {
+    public Quadtree(int[][][] imageArray, int x, int y, int width, int height, double threshold, int minBlockSize, int errorMethod) {
         if (width*height == 0) {
             isLeaf = false;
             return;
@@ -14,17 +17,17 @@ public class Quadtree {
         int[] avgColor = computeAverageColor(imageArray, x, y, width, height);
         this.root = new Node(x, y, avgColor[0], avgColor[1], avgColor[2]);
         this.isLeaf = true;
-        if (shouldSplit(imageArray, x, y, width, height, threshold, minBlockSize)) {
+        if (shouldSplit(imageArray, avgColor, x, y, width, height, threshold, minBlockSize, errorMethod)) {
             this.isLeaf = false;
             int westW = width / 2;
             int northH = height / 2;
 
             int eastW = width - westW;
             int southH = height - northH;
-            nw = new Quadtree(imageArray, x, y, westW, northH, threshold, minBlockSize);
-            ne = new Quadtree(imageArray, x + westW, y, eastW, northH, threshold, minBlockSize);
-            sw = new Quadtree(imageArray, x, y + northH, westW, southH, threshold, minBlockSize);
-            se = new Quadtree(imageArray, x + westW, y + northH, eastW, southH, threshold, minBlockSize);
+            nw = new Quadtree(imageArray, x, y, westW, northH, threshold, minBlockSize, errorMethod);
+            ne = new Quadtree(imageArray, x + westW, y, eastW, northH, threshold, minBlockSize, errorMethod);
+            sw = new Quadtree(imageArray, x, y + northH, westW, southH, threshold, minBlockSize, errorMethod);
+            se = new Quadtree(imageArray, x + westW, y + northH, eastW, southH, threshold, minBlockSize, errorMethod);
         }
     }
 
@@ -53,16 +56,41 @@ public class Quadtree {
         return new int[] {sumR / count, sumG / count, sumB / count};
     }
 
-    private boolean shouldSplit(int[][][] image, int x, int y, int width, int height, double threshold, int minBlockSize) {
+    private boolean shouldSplit(int[][][] image, int[] avgColor, int x, int y, int width, int height, double threshold, int minBlockSize, int errorMethod) {
 
         if (width*height <= minBlockSize) return false;
 
-        double variance = computeVariance(image, x, y, width, height);
-        return variance > threshold;
+        double error = computeError(image, avgColor, x, y, width, height, errorMethod);
+        if (errorMethod == 5) {
+            return error < threshold;
+        }
+        return error > threshold;
     }
 
-    private double computeVariance(int[][][] image, int x, int y, int width, int height) {
-        int[] avgColor = computeAverageColor(image, x, y, width, height);
+    private double computeError(int[][][] image, int[] avgColor, int x, int y, int width, int height, int errorMethod) {
+        double error = 0;
+        if (errorMethod == 1) {
+            error = computeVariance(image, avgColor, x, y, width, height);
+        }
+        else if (errorMethod == 2) {
+            error = computeMAD(image, avgColor, x, y, width, height);
+        }
+        else if (errorMethod == 3) {
+            error = computeMPD(image, x, y, width, height);
+        }
+        else if (errorMethod == 4) {
+            error = computeEntropy(image, x, y, width, height);
+        }
+        else if (errorMethod == 5) {
+            error = computeSSIM(image, avgColor, x, y, width, height);
+        }
+
+        return error;
+    }
+
+
+    // VARIANCE
+    private double computeVariance(int[][][] image, int[] avgColor, int x, int y, int width, int height) {
         double redVariance = 0;
         double greenVariance = 0;
         double blueVariance = 0;
@@ -80,7 +108,101 @@ public class Quadtree {
         return (redVariance + greenVariance + blueVariance) / 3;
     }
 
-    private static class Node {
+    // MEAN ABSOLUTE DEVIATION (MAD)
+    private double computeMAD(int[][][] image, int[] avgColor, int x, int y, int width, int height) {
+        double redMAD = 0;
+        double greenMAD = 0;
+        double blueMAD = 0;
+
+        for (int i = y; i < y + height; i++) {
+            for (int j = x; j < x + width; j++) {
+                redMAD += Math.abs(image[i][j][0] - avgColor[0]);
+                greenMAD += Math.abs(image[i][j][1] - avgColor[1]);
+                blueMAD += Math.abs(image[i][j][2] - avgColor[2]);
+            }
+        }
+        redMAD /= width*height;
+        greenMAD /= width*height;
+        blueMAD /= width*height;
+        return (redMAD + greenMAD + blueMAD) / 3;
+    }
+
+    // MAX PIXEL DIFFERENCE (MPD)
+    private double computeMPD(int[][][] image, int x, int y, int width, int height) {
+        double redMax = image[y][x][0];
+        double redMin = image[y][x][0];
+        double greenMax = image[y][x][1];
+        double greenMin = image[y][x][1];
+        double blueMax = image[y][x][2];
+        double blueMin = image[y][x][2];
+
+        for (int i = y; i < y + height; i++) {
+            for (int j = x; j < x + width; j++) {
+                if (image[i][j][0] > redMax) redMax = image[i][j][0];
+                if (image[i][j][0] < redMin) redMin = image[i][j][0];
+
+                if (image[i][j][1] > greenMax) greenMax = image[i][j][1];
+                if (image[i][j][1] < greenMin) greenMin = image[i][j][1];
+
+                if (image[i][j][2] > blueMax) blueMax = image[i][j][2];
+                if (image[i][j][2] < blueMin) blueMin = image[i][j][2];
+            }
+        }
+        return ((redMax - redMin) + (greenMax - greenMin) + (blueMax - blueMin)) / 3;
+    }
+
+
+    // ENTROPY
+    private double computeEntropy(int[][][] image, int x, int y, int width, int height) {
+        return (computeChannelEntropy(image, x, y, width, height, 0) +
+                computeChannelEntropy(image, x, y, width, height, 1) +
+                computeChannelEntropy(image, x, y, width, height, 2)) / 3.0;
+    }
+
+    private double computeChannelEntropy(int[][][] image, int x, int y, int width, int height, int channel) {
+        Map<Integer, Integer> frequencyMap = new HashMap<>();
+        int totalPixels = width * height;
+
+        for (int i = y; i < y + height; i++) {
+            for (int j = x; j < x + width; j++) {
+                int pixelValue = image[i][j][channel];
+                frequencyMap.put(pixelValue, frequencyMap.getOrDefault(pixelValue, 0) + 1);
+            }
+        }
+
+        double entropy = 0.0;
+        for (int count : frequencyMap.values()) {
+            double probability = (double) count / totalPixels;
+            entropy -= probability * (Math.log(probability) / Math.log(2));
+        }
+        return entropy;
+    }
+
+    private double computeSSIM(int[][][] image, int[] avgColor, int x, int y, int width, int height) {
+        double ssimR = computeChannelSSIM(image, avgColor[0], x, y, width, height, 0);
+        double ssimG = computeChannelSSIM(image, avgColor[1], x, y, width, height, 1);
+        double ssimB = computeChannelSSIM(image, avgColor[2], x, y, width, height, 2);
+
+        return 0.2989*ssimR + 0.5870*ssimG + 0.1140*ssimB;
+    }
+
+    private double computeChannelSSIM(int[][][] image, int mean, int x, int y, int width, int height, int channel) {
+        final double C2 = 2.55;
+        double varianceX = 0;
+        for (int i = y; i < y + height; i++) {
+            for (int j = x; j < x + width; j++) {
+                double diffX = image[i][j][channel] - mean;
+                varianceX += diffX * diffX;
+            }
+        }
+        varianceX /= (width * height);
+
+        //penyederhanaan karena varianceY = 0, cov = 0, meanX=meanY=mean
+        return C2 / (varianceX + C2);
+    }
+
+
+        private static class Node {
         int r, g, b, x, y;
 
         public Node(int x, int y, int r, int g, int b) {
