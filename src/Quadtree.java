@@ -11,8 +11,6 @@ public class Quadtree {
         }
         this.width = width;
         this.height = height;
-        System.out.println(width);
-        System.out.println(height);
         int[] avgColor = computeAverageColor(imageArray, x, y, width, height);
         this.root = new Node(x, y, avgColor[0], avgColor[1], avgColor[2]);
         this.isLeaf = true;

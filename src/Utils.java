@@ -4,13 +4,11 @@ import javax.imageio.ImageIO;
 
 public class Utils {
 
-    public static int[][][] imageToArray(String imagePath) {
+    public static int[][][] pathToArray(String imagePath) {
         try {
             BufferedImage image = ImageIO.read(new File(imagePath));
             int width = image.getWidth();
             int height = image.getHeight();
-            System.out.println(width);
-            System.out.println(height);
             int[][][] imageArray = new int[height][width][3];
 
             for (int y = 0; y < height; y++) {
