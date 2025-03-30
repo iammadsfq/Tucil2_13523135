@@ -1,6 +1,7 @@
-D:\Syafiq\4th_Semester\Stima\Tucil2\test\monalisa.jpeg
+D:\Syafiq\4th_Semester\Stima\Tucil2\test\robert.jpeg
 1
-1
-1
-0,6
+4
+16
+0,01
 D:\Syafiq\4th_Semester\Stima\Tucil2\test\out.jpeg
+D:\Syafiq\4th_Semester\Stima\Tucil2\test\out.gif

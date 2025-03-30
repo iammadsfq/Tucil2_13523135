@@ -1,3 +1,5 @@
+import java.awt.image.BufferedImage;
+import java.util.List;
 import java.util.Scanner;
 import java.io.File;
 
@@ -102,7 +104,7 @@ public class Main {
             String outputPath;
             do {
                 System.out.print("Masukkan path gambar output: ");
-                scanner.nextLine(); // Consume newline
+                scanner.nextLine();
                 outputPath = scanner.nextLine().trim();
 
                 String inputExt = inputPath.substring(inputPath.lastIndexOf('.') + 1).toLowerCase();
@@ -114,9 +116,14 @@ public class Main {
             } while (!inputPath.substring(inputPath.lastIndexOf('.') + 1).equalsIgnoreCase(outputPath.substring(outputPath.lastIndexOf('.') + 1)));
 
 
+
             File inputFile = new File(inputPath);
             int[][][] imageArray = Utils.pathToArray(inputPath);
 
+            // 7. [INPUT] Alamat absolut GIF
+            System.out.print("Masukkan path GIF output (kosongkan jika tidak ingin menyimpan GIF): ");
+            String gifOutputPath = scanner.nextLine().trim();
+            boolean generateGif = !gifOutputPath.isEmpty();
 
             //START
             long startTime = System.nanoTime();
@@ -129,17 +136,22 @@ public class Main {
                 tree = binSearchResult.tree;
             }
             else {
-                tree = new Quadtree(imageArray, 0, 0, imageArray[0].length, imageArray.length, threshold, minBlockSize, errorMethod);
+                tree = new Quadtree(imageArray, 0, 0, imageArray[0].length, imageArray.length, threshold, minBlockSize, errorMethod, 1);
             }
 
             Utils.saveQuadtreeAsImage(tree, imageArray[0].length, imageArray.length, outputPath);
+            if (generateGif) {
+                int maxDepth = tree.maxDepth();
+                List<BufferedImage> frames = Utils.generateQuadtreeFrames(tree, imageArray[0].length, imageArray.length, maxDepth);
+                Utils.createGIF(frames, gifOutputPath, 500, true);
+            }
             long endTime = System.nanoTime();
 
             System.out.println("Berhasil Kompresi!");
             System.out.println("Sebelum: " + String.format("%.2f KB", Utils.getFileSize(inputPath) / 1024.0));
             System.out.println("Sesudah: " + String.format("%.2f KB", Utils.getFileSize(outputPath) / 1024.0));
             System.out.println("Persentase Kompresi: " + String.format("%.2f", (1 - Utils.getFileSize(outputPath) / (double) Utils.getFileSize(inputPath)) * 100) + "%");
-            System.out.println("Kedalaman: " + tree.getDepth());
+            System.out.println("Kedalaman: " + tree.maxDepth());
             System.out.println("Waktu eksekusi: "+ (endTime - startTime)/1_000_000 + " ms");
         } catch (Exception e) {
             System.out.println("Gagal!");
@@ -178,7 +190,7 @@ public class Main {
         Quadtree tree = null;
         int i;
         for (i = 0; i < 100; i++) {
-            tree = new Quadtree(imageArray, 0, 0, imageArray[0].length, imageArray.length, threshold, minBlockSize, errorMethod);
+            tree = new Quadtree(imageArray, 0, 0, imageArray[0].length, imageArray.length, threshold, minBlockSize, errorMethod, 1);
             try {
                 Utils.saveQuadtreeAsImage(tree, imageArray[0].length, imageArray.length, outputPath);
             } catch (Exception e) {

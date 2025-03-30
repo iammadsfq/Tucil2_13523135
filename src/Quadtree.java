@@ -4,10 +4,11 @@ import java.util.Map;
 public class Quadtree {
     int width, height;
     Node root;
+    int depth; // root = 1
     Quadtree nw, ne, sw, se;
     boolean isLeaf;
 
-    public Quadtree(int[][][] imageArray, int x, int y, int width, int height, double threshold, int minBlockSize, int errorMethod) {
+    public Quadtree(int[][][] imageArray, int x, int y, int width, int height, double threshold, int minBlockSize, int errorMethod, int depth) {
         if (width*height == 0) {
             isLeaf = false;
             return;
@@ -16,6 +17,7 @@ public class Quadtree {
         this.height = height;
         int[] avgColor = computeAverageColor(imageArray, x, y, width, height);
         this.root = new Node(x, y, avgColor[0], avgColor[1], avgColor[2]);
+        this.depth = depth;
         this.isLeaf = true;
         if (shouldSplit(imageArray, avgColor, x, y, width, height, threshold, minBlockSize, errorMethod)) {
             this.isLeaf = false;
@@ -24,21 +26,21 @@ public class Quadtree {
 
             int eastW = width - westW;
             int southH = height - northH;
-            nw = new Quadtree(imageArray, x, y, westW, northH, threshold, minBlockSize, errorMethod);
-            ne = new Quadtree(imageArray, x + westW, y, eastW, northH, threshold, minBlockSize, errorMethod);
-            sw = new Quadtree(imageArray, x, y + northH, westW, southH, threshold, minBlockSize, errorMethod);
-            se = new Quadtree(imageArray, x + westW, y + northH, eastW, southH, threshold, minBlockSize, errorMethod);
+            nw = new Quadtree(imageArray, x, y, westW, northH, threshold, minBlockSize, errorMethod, depth+1);
+            ne = new Quadtree(imageArray, x + westW, y, eastW, northH, threshold, minBlockSize, errorMethod, depth+1);
+            sw = new Quadtree(imageArray, x, y + northH, westW, southH, threshold, minBlockSize, errorMethod, depth+1);
+            se = new Quadtree(imageArray, x + westW, y + northH, eastW, southH, threshold, minBlockSize, errorMethod, depth+1);
         }
     }
 
-    public int getDepth() {
+    public int maxDepth() {
         if (isLeaf) {
-            return 1; // Leaf node
+            return 1;
         }
-        int nwDepth = (nw != null) ? nw.getDepth() : 0;
-        int neDepth = (ne != null) ? ne.getDepth() : 0;
-        int swDepth = (sw != null) ? sw.getDepth() : 0;
-        int seDepth = (se != null) ? se.getDepth() : 0;
+        int nwDepth = (nw != null) ? nw.maxDepth() : 0;
+        int neDepth = (ne != null) ? ne.maxDepth() : 0;
+        int swDepth = (sw != null) ? sw.maxDepth() : 0;
+        int seDepth = (se != null) ? se.maxDepth() : 0;
 
         return 1 + Math.max(Math.max(nwDepth, neDepth), Math.max(swDepth, seDepth));
     }
