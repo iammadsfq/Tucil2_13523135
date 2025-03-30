@@ -1,4 +1,6 @@
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.List;
 import java.util.Scanner;
 import java.io.File;
@@ -24,11 +26,33 @@ public class Main {
             do {
                 System.out.print("Masukkan path gambar input: ");
                 inputPath = scanner.nextLine().trim();
-                if (!new File(inputPath).exists()) {
-                    System.out.println("Error: File tidak ditemukan. Coba lagi.");
-                }
-            } while (!new File(inputPath).exists());
+                File file = new File(inputPath);
 
+                if (!file.exists() || !file.isFile()) {
+                    System.out.println("Error: File tidak ditemukan. Coba lagi.\n");
+                    continue;
+                }
+                String lowerPath = inputPath.toLowerCase();
+                if (!lowerPath.endsWith(".jpg") && !lowerPath.endsWith(".jpeg") &&
+                        !lowerPath.endsWith(".png")) {
+                    System.out.println("Error: Format file tidak didukung. Harus berupa .jpg, .jpeg, atau .png. Coba lagi.\n");
+                    continue;
+                }
+
+                try {
+                    BufferedImage testImage = ImageIO.read(file);
+                    if (testImage == null) {
+                        System.out.println("Error: Tidak bisa membaca gambar. Coba lagi.\n");
+                        continue;
+                    }
+                } catch (IOException e) {
+                    System.out.println("Error: Tidak bisa membaca file. Coba lagi.\n");
+                    continue;
+                }
+
+                break;
+
+            } while (true);
 
 
             // 2. [INPUT] Metode perhitungan error (gunakan penomoran sebagai input)
@@ -104,16 +128,36 @@ public class Main {
             String outputPath;
             do {
                 System.out.print("Masukkan path gambar output: ");
-                scanner.nextLine();
                 outputPath = scanner.nextLine().trim();
+
+                File outputFile = new File(outputPath);
+                File outputDir = outputFile.getParentFile();
+
+                if (outputPath.isEmpty()) {
+                    System.out.println("Error: Path tidak boleh kosong. Coba lagi.\n");
+                    continue;
+                }
+
+                if (!outputPath.contains(".")) {
+                    System.out.println("Error: Path harus memiliki ekstensi file. Coba lagi.\n");
+                    continue;
+                }
 
                 String inputExt = inputPath.substring(inputPath.lastIndexOf('.') + 1).toLowerCase();
                 String outputExt = outputPath.substring(outputPath.lastIndexOf('.') + 1).toLowerCase();
-
                 if (!inputExt.equals(outputExt)) {
-                    System.out.println("Error: Ekstensi file input dan output harus sama. Coba lagi.");
+                    System.out.println("Error: Ekstensi file input dan output harus sama. Coba lagi.\n");
+                    continue;
                 }
-            } while (!inputPath.substring(inputPath.lastIndexOf('.') + 1).equalsIgnoreCase(outputPath.substring(outputPath.lastIndexOf('.') + 1)));
+
+                if (outputDir != null && !outputDir.exists()) {
+                    System.out.println("Error: Folder tujuan tidak ditemukan. Coba lagi.\n");
+                    continue;
+                }
+
+                break;
+
+            } while (true);
 
 
 
@@ -121,9 +165,35 @@ public class Main {
             int[][][] imageArray = Utils.pathToArray(inputPath);
 
             // 7. [INPUT] Alamat absolut GIF
-            System.out.print("Masukkan path GIF output (kosongkan jika tidak ingin menyimpan GIF): ");
-            String gifOutputPath = scanner.nextLine().trim();
-            boolean generateGif = !gifOutputPath.isEmpty();
+            String gifOutputPath;
+            boolean generateGif;
+            do {
+                System.out.print("Masukkan path GIF output (kosongkan jika tidak ingin menyimpan GIF): ");
+                gifOutputPath = scanner.nextLine().trim();
+
+                if (gifOutputPath.isEmpty()) {
+                    generateGif = false;
+                    break;
+                }
+
+
+                File gifFile = new File(gifOutputPath);
+                String gifExt = gifOutputPath.substring(gifOutputPath.lastIndexOf('.') + 1).toLowerCase();
+                if (!gifExt.equals("gif")) {
+                    System.out.println("Error: Ekstensi file harus .gif. Coba lagi.\n");
+                    continue;
+                }
+
+                File gifDir = gifFile.getParentFile();
+                if (gifDir != null && (!gifDir.exists() || !gifDir.isDirectory())) {
+                    System.out.println("Error: Folder tujuan tidak ditemukan. Coba lagi.\n");
+                    continue;
+                }
+
+                generateGif = true;
+                break;
+            } while (true);
+
 
             //START
             long startTime = System.nanoTime();
@@ -148,11 +218,35 @@ public class Main {
             long endTime = System.nanoTime();
 
             System.out.println("Berhasil Kompresi!");
-            System.out.println("Sebelum: " + String.format("%.2f KB", Utils.getFileSize(inputPath) / 1024.0));
-            System.out.println("Sesudah: " + String.format("%.2f KB", Utils.getFileSize(outputPath) / 1024.0));
-            System.out.println("Persentase Kompresi: " + String.format("%.2f", (1 - Utils.getFileSize(outputPath) / (double) Utils.getFileSize(inputPath)) * 100) + "%");
-            System.out.println("Kedalaman: " + tree.maxDepth());
-            System.out.println("Waktu eksekusi: "+ (endTime - startTime)/1_000_000 + " ms");
+//            8. [OUTPUT] waktu eksekusi
+            System.out.println("1. Waktu eksekusi: "+ (endTime - startTime)/1_000_000 + " ms");
+
+//            9. [OUTPUT] ukuran gambar sebelum
+            System.out.println("2. Sebelum: " + String.format("%.2f KB", Utils.getFileSize(inputPath) / 1024.0));
+
+//            10. [OUTPUT] ukuran gambar setelah
+            System.out.println("3. Sesudah: " + String.format("%.2f KB", Utils.getFileSize(outputPath) / 1024.0));
+
+//            11. [OUTPUT] persentase kompresi
+            System.out.println("4. Persentase Kompresi: " + String.format("%.2f", (1 - Utils.getFileSize(outputPath) / (double) Utils.getFileSize(inputPath)) * 100) + "%");
+
+//            12. [OUTPUT] kedalaman pohon
+            System.out.println("5. Kedalaman Pohon: " + tree.maxDepth());
+
+//            13. [OUTPUT] banyak simpul pada pohon
+            System.out.println("6. Jumlah Simpul: " + tree.leafCount());
+//            14. [OUTPUT] gambar hasil kompresi pada alamat yang sudah ditentukan
+            System.out.println("7. Gambar Tersimpan: " + outputPath);
+
+//            15. [OUTPUT] GIF proses kompresi pada alamat yang sudah ditentukan (bonus)
+            if (generateGif) {
+                System.out.println("8. GIF Tersimpan: " + gifOutputPath);
+            }
+            else {
+                System.out.println("8. GIF tidak disimpan!");
+            }
+
+
         } catch (Exception e) {
             System.out.println("Gagal!");
             e.printStackTrace();
@@ -166,14 +260,10 @@ public class Main {
         double lowerThreshold;
         double upperThreshold;
         if (errorMethod == 1) {
-            lowerThreshold = Math.pow(10,targetCompression*10-7);
-            upperThreshold = Math.pow(10,targetCompression*10-1);
+            lowerThreshold = 0;
+            upperThreshold = 128*128;
         }
-        else if (errorMethod == 2) {
-            lowerThreshold = Math.pow(Math.pow(10,targetCompression*10-7), 2.0/3);
-            upperThreshold = Math.pow(Math.pow(10,targetCompression*10-1), 2.0/3);
-        }
-        else if (errorMethod == 3) {
+        else if (errorMethod == 2 || errorMethod == 3) {
             lowerThreshold = 0;
             upperThreshold = 255;
         }
@@ -187,9 +277,14 @@ public class Main {
         }
         double threshold = (lowerThreshold + upperThreshold) / 2.0;
         double temp;
+        double inputSize = inputFile.length();
         Quadtree tree = null;
         int i;
         for (i = 0; i < 100; i++) {
+            if (tree != null) {
+                tree = null;
+                System.gc();
+            }
             tree = new Quadtree(imageArray, 0, 0, imageArray[0].length, imageArray.length, threshold, minBlockSize, errorMethod, 1);
             try {
                 Utils.saveQuadtreeAsImage(tree, imageArray[0].length, imageArray.length, outputPath);
@@ -197,8 +292,8 @@ public class Main {
                 throw new RuntimeException(e);
             }
 
-            double compressionRatio = 1 - Utils.getFileSize(outputPath) / (double) inputFile.length();
-            if (Math.abs(compressionRatio - targetCompression) < 0.005) {
+            double compressionRatio = 1 - Utils.getFileSize(outputPath) / inputSize;
+            if (Math.abs(compressionRatio - targetCompression) < 0.003) {
                 break;
             }
 
@@ -222,11 +317,7 @@ public class Main {
                 break;
             }
             threshold = temp;
-            System.out.println(i);
-            System.out.println(threshold);
         }
-        System.out.println(i);
-        System.out.println(threshold);
         return new BinSearchResult(threshold, tree);
     }
 

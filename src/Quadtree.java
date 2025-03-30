@@ -45,6 +45,18 @@ public class Quadtree {
         return 1 + Math.max(Math.max(nwDepth, neDepth), Math.max(swDepth, seDepth));
     }
 
+    public int leafCount() {
+        if (isLeaf) {
+            return 1;
+        }
+        int nwCount = (nw != null) ? nw.leafCount() : 0;
+        int neCount = (ne != null) ? ne.leafCount() : 0;
+        int swCount = (sw != null) ? sw.leafCount() : 0;
+        int seCount = (se != null) ? se.leafCount() : 0;
+
+        return 1 + nwCount + neCount + swCount + seCount;
+    }
+
     private int[] computeAverageColor(int[][][] image, int x, int y, int width, int height) {
         int sumR = 0, sumG = 0, sumB = 0, count = width * height;
 
@@ -189,7 +201,7 @@ public class Quadtree {
     }
 
     private double computeChannelSSIM(int[][][] image, int mean, int x, int y, int width, int height, int channel) {
-        final double C2 = 2.55;
+        final double C2 = 58.5225;
         double varianceX = 0;
         for (int i = y; i < y + height; i++) {
             for (int j = x; j < x + width; j++) {

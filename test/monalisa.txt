@@ -1,7 +1,7 @@
-D:\Syafiq\4th_Semester\Stima\Tucil2\test\robert.jpeg
+D:\Syafiq\4th_Semester\Stima\Tucil2\test\lion.jpg
 1
-4
+225
 16
-0,01
-D:\Syafiq\4th_Semester\Stima\Tucil2\test\out.jpeg
+0
+D:\Syafiq\4th_Semester\Stima\Tucil2\test\out.jpg
 D:\Syafiq\4th_Semester\Stima\Tucil2\test\out.gif

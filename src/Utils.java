@@ -39,7 +39,7 @@ public class Utils {
         ImageIO.write(img, outputExt, new File(outputPath));
     }
 
-    private static void fillImageFromQuadtree(Quadtree tree, BufferedImage img) {
+    public static void fillImageFromQuadtree(Quadtree tree, BufferedImage img) {
         if (tree.root == null) return;
 
         if (tree.isLeaf) {
@@ -65,12 +65,16 @@ public class Utils {
     public static List<BufferedImage> generateQuadtreeFrames(Quadtree tree, int width, int height, int maxDepth) {
         List<BufferedImage> frames = new ArrayList<>();
         int step = (maxDepth - 1) / 4;
+        if (step < 1) step = 1;
 
-        for (int d = 1; d <= maxDepth; d += step) {
+        for (int d = 1; d < maxDepth; d += step) {
             BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             fillQuadtreeFrame(tree, img, d, 1);
             frames.add(img);
         }
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        fillQuadtreeFrame(tree, img, maxDepth, 1);
+        frames.add(img);
 
         return frames;
     }
