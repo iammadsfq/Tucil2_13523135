@@ -72,7 +72,7 @@ public class Quadtree {
 
     private boolean shouldSplit(int[][][] image, int[] avgColor, int x, int y, int width, int height, double threshold, int minBlockSize, int errorMethod) {
 
-        if (width*height <= minBlockSize) return false;
+        if (width*height/4 < minBlockSize) return false;
 
         double error = computeError(image, avgColor, x, y, width, height, errorMethod);
         if (errorMethod == 5) {
