@@ -134,7 +134,6 @@ public class Main {
                 File outputDir = outputFile.getParentFile();
 
                 if (outputPath.isEmpty()) {
-                    System.out.println("Error: Path tidak boleh kosong. Coba lagi.\n");
                     continue;
                 }
 
@@ -158,8 +157,6 @@ public class Main {
                 break;
 
             } while (true);
-
-
 
             File inputFile = new File(inputPath);
             int[][][] imageArray = Utils.pathToArray(inputPath);
