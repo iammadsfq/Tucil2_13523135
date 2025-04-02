@@ -22,3 +22,7 @@ cd ./tulisPathDisini
 3. **Jalankan program**
 ```bash
 java -jar bin/Tucil2_13523135.jar
+```
+
+### Author
+- Ahmad Syafiq - 13523135
